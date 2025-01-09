@@ -1,0 +1,22 @@
+https://gist.github.com/KrisLowet/675ba34e682c6d2afbc53fc317b41e85
+https://techblog.nexxwave.eu/public-dns-malware-filters-tested-in-2024/
+
+
+
+Como realizamos o teste
+Escrevemos um simples Script bash para este teste. Este script fez:
+
+	10 Pings para cada resolvedor DNS para obter um tempo médio de ping.
+	Um teste de 5 sites conhecidos que definitivamente não estão na lista maliciosa para confirmar a correção dos resolvedores de DNS.
+	Uma verificação de cada domínio malicioso contra o resolvedor DNS não filtrado 1.1.1.1 (Cloudflare) para verificar se o domínio tem pelo menos 1 registro A.
+	Se pelo menos 1 A-registro foi encontrado, o domínio foi testado contra todos os resolvedores DNS.
+	Se o resolvedor DNS testado retornou um endereço IP válido, ele foi armazenado em um CSV. Se o resolvedor DNS não retornou nenhum valor ou o endereço IP 0.0.0.0 ou 127.0.0.1, então nenhum valor foi armazenado no CSV.
+	Se o resolvedor DNS não retornou nenhum valor ou o valor 0.0.0.0 ou 127.0.0.1, isso era um sinal de que ele não estava resolvendo o domínio. Nesse caso, assumimos que o domínio é conhecido pelo provedor como 'malicioso'.
+	
+	
+#Fórmula para contar IPs excel
+
+	=CONT.SE(A1:A100; "*.*.*.*")
+
+# Calculando %
+	1-(B101/A100)

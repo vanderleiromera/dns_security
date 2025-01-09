@@ -1,0 +1,23 @@
+https://github.com/divestedcg/circumnavigator/blob/master/test.sh
+
+https://chatgpt.com/c/677c21c6-f95c-8013-9f82-4e89c8a8db41
+
+Depurando
+	bash -x test.sh   
+	
+	
+
+shuffleBad 100;
+	https://chatgpt.com/c/677d844d-2b60-8013-b434-209e84f9926a
+	
+	
+Logica block dns
+
+❯ dig +timeout=2 @185.228.168.9 +short A 0.0.0.0 ups-support.dns-report.com
+❯ dig +timeout=2 @185.228.168.9 +short A 0.0.0.0 google.com
+142.250.219.206
+❯ dig +timeout=2 @8.8.8.8 +short A 0.0.0.0 ups-support.dns-report.com
+193.143.1.54
+❯ dig +timeout=2 @9.9.9.9 +short A 0.0.0.0 ups-support.dns-report.com
+
+
