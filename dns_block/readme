@@ -20,3 +20,12 @@ Escrevemos um simples Script bash para este teste. Este script fez:
 
 # Calculando %
 	1-(B101/A100)
+	
+Logica block dns
+
+❯ dig +timeout=2 @185.228.168.9 +short A 0.0.0.0 ups-support.dns-report.com
+❯ dig +timeout=2 @185.228.168.9 +short A 0.0.0.0 google.com
+142.250.219.206
+❯ dig +timeout=2 @8.8.8.8 +short A 0.0.0.0 ups-support.dns-report.com
+193.143.1.54
+❯ dig +timeout=2 @9.9.9.9 +short A 0.0.0.0 ups-support.dns-report.com

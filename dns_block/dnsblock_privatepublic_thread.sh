@@ -7,7 +7,7 @@ result='dnsblock_result_'$(date '+%Y%m%d')'.csv' # CSV result file.
 #
 # Download the most recent hosts lists and combine to one file.
 # 
-sample_size=400 #numeros dominios de amostras
+sample_size=100 #numeros dominios de amostras
 echo -e "### Downloading hosts lists."
 
 # List 1. Source: Abuse.ch URLhaus. URLhaus is a project from abuse.ch with the goal of sharing malicious URLs that are being used for malware distribution.
@@ -121,9 +121,14 @@ done
 #
 
 echo "### Start test of hosts at $(date). This will take ~$timeexpected hours."
+# Número máximo de threads paralelas
+MAX_THREADS=8
 
 echo -e "\n" >> "$result";
 echo -e "Domain name, $ns0_sp - $ns0_ip,$ns1_sp - $ns1_ip,$ns2_sp - $ns2_ip,$ns3_sp - $ns3_ip,$ns4_sp - $ns4_ip,$ns5_sp - $ns5_ip,$ns6_sp - $ns6_ip,$ns7_sp - $ns7_ip,$ns8_sp - $ns8_ip,$ns9_sp - $ns9_ip,$ns10_sp - $ns10_ip" >> "$result";
+
+# Controle de threads com File Descriptors (FD)
+exec 3<> /dev/null  # FD para sincronização
 
 while IFS= read -r domain
 do
@@ -178,10 +183,15 @@ do
       echo -en "$domain,$ip0,$ip1,$ip2,$ip3,$ip4,$ip5,$ip6,$ip7,$ip8,$ip9,$ip10\n" >> "$result";
 
     fi
-
-    sleep 0.1 # Don't hammer the public resolver.
+  # Controle de threads
+  while (( $(jobs -r | wc -l) >= MAX_THREADS )); do
+    sleep 0.1
+  done
 
   fi
 done < "$hosts_list"
+# Espera todas as threads terminarem
+wait
 
 echo "### End test of hosts at $(date)"
+

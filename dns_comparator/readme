@@ -5,7 +5,7 @@ https://chatgpt.com/c/677c21c6-f95c-8013-9f82-4e89c8a8db41
 Depurando
 	bash -x test.sh   
 	
-	
+sudo apt install dos2unix
 
 shuffleBad 100;
 	https://chatgpt.com/c/677d844d-2b60-8013-b434-209e84f9926a

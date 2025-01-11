@@ -36,6 +36,12 @@ function resolveHost() {
         echo "Error: Blocked domain (0.0.0.0) for $domain" >> "results/$resultTime/errors.log"
         return 1
     fi
+    
+        # Verificar se é uma resposta Adguard Ip (94.140.14.33)
+    if [[ "$response" == "94.140.14.33" ]]; then
+        echo "Error: Blocked domain (94.140.14.33) for $domain" >> "results/$resultTime/errors.log"
+        return 1
+    fi
 
     # Verificar se a resposta contém um endereço IP válido
     if echo "$response" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
@@ -116,21 +122,21 @@ function runAllTests(){
 	#runAllLists "@1.1.1.1" "Cloudflare";
 	runAllLists "@1.1.1.3" "Cloudflare (Adult)";
 
-	#runAllLists "@9.9.9.10" "Quad9 (nonblocking)";
-	runAllLists "@9.9.9.11" "Quad9 (ECS)";
+	runAllLists "@10.11.11.11" "AdguardHome (local)";
+	runAllLists "@9.9.9.9" "Quad9 (Security)";
 
 	runAllLists "@193.110.81.0" "DNS0";
 	#runAllLists "@193.110.81.9" "DNS0 (ZERO)";
 
-	#runAllLists "@10.11.7.11" "Nextdns";
-	#runAllLists "@10.11.13.11" "ControlD";
+	runAllLists "@10.11.7.11" "Nextdns (local)";
+	runAllLists "@10.11.13.11" "ControlD (local)";
 
 	runAllLists "@94.140.14.15" "Adguard Family";
 
 	#runAllLists "@76.76.10.1" "ControlD (malware)";
 	runAllLists "@76.76.10.2" "ControlD (ads-trackers-malware)";
 
-	runAllLists "@185.228.168.9" "CleanBrowse (Security)";
+	runAllLists "@185.228.168.168" "CleanBrowse (Security)";
 	#runAllLists "@156.154.70.2" "Neustar";
 
 	#runAllLists "@77.88.8.8" "Yandex";
@@ -158,18 +164,47 @@ function haltTests(){
 export -f haltTests;
 
 function shuffleBad(){
-	shuf -n "$1" "domains-bad-abusech.txt" > "domains-bad-abusech-shuf.txt";
-	shuf -n "$1" "domains-bad-certpl.txt" > "domains-bad-certpl-shuf.txt";
-	dos2unix domains-bad*.txt; #Fixup
+    # Verifica se o domínio responde no DNS do Cloudflare com timeout
+    check_domain() {
+        domain="$1"
+        if timeout 3 dig +short @"1.1.1.1" "$domain" A | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' || \
+           timeout 3 dig +short @"1.1.1.1" "$domain" AAAA | grep -qE '^[0-9a-fA-F:]+$'; then
+            echo "$domain"
+        fi
+    }
+
+    echo "🔍 Filtrando até $1 domínios aleatórios de domains-bad-abusech.txt..."
+    > "domains-bad-abusech-shuf.txt"
+    # Embaralha e filtra até o número de domínios especificado
+    shuf "domains-bad-abusech.txt" | head -n "$1" | while IFS= read -r domain; do
+        check_domain "$domain" >> "domains-bad-abusech-shuf.txt"
+    done
+
+    echo "🔍 Filtrando até $1 domínios aleatórios de domains-bad-certpl.txt..."
+    > "domains-bad-certpl-shuf.txt"
+    # Embaralha e filtra até o número de domínios especificado
+    shuf "domains-bad-certpl.txt" | head -n "$1" | while IFS= read -r domain; do
+        check_domain "$domain" >> "domains-bad-certpl-shuf.txt"
+    done
+
+    # Ajuste de formatação
+    dos2unix domains-bad*-shuf.txt
+
+    echo "✅ Filtragem concluída com até $1 domínios."
 }
+
 export -f shuffleBad;
 
 function downloadLists(){
 	wget "https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-hosts.txt" -O - | grep -i -v -e '^#' | sed 's|127.0.0.1\t||' > "domains-bad-abusech.txt";
 	wget "https://hole.cert.pl/domains/domains.txt" -O "domains-bad-certpl.txt";
 	dos2unix domains-bad*.txt; #Fixup
+	wget "https://raw.githubusercontent.com/vanderleiromera/dns_security/refs/heads/main/dns_comparator/domains-good.txt" -O "domains-good.txt";
 }
 export -f downloadLists;
+
+#Download das listas
+downloadLists
 
 # Chama a função principal
 runAllTests
