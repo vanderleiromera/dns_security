@@ -108,6 +108,7 @@ function runAllLists(){
 	testResolver "$resolver" "domains-good.txt" "$prettyname";
 	testResolver "$resolver" "domains-bad-abusech-shuf.txt" "$prettyname";
 	testResolver "$resolver" "domains-bad-certpl-shuf.txt" "$prettyname";
+	testResolver "$resolver" "domains-bad-disconnect_ads-shuf.txt" "$prettyname";
 }
 export -f runAllLists;
 
@@ -129,7 +130,7 @@ function runAllTests(){
 	#runAllLists "@193.110.81.9" "DNS0 (ZERO)";
 
 	runAllLists "@10.11.7.11" "Nextdns (local)";
-	runAllLists "@10.11.13.11" "ControlD (local)";
+	runAllLists "@10.11.13.11" "Techdns (local)";
 
 	runAllLists "@94.140.14.15" "Adguard Family";
 
@@ -186,6 +187,13 @@ function shuffleBad(){
     shuf "domains-bad-certpl.txt" | head -n "$1" | while IFS= read -r domain; do
         check_domain "$domain" >> "domains-bad-certpl-shuf.txt"
     done
+    
+    echo "🔍 Filtrando até $1 domínios aleatórios de domains-bad-disconnect_ads.txt..."
+    > "domains-bad-disconnect_ads-shuf.txt"
+    # Embaralha e filtra até o número de domínios especificado
+    shuf "domains-bad-disconnect_ads.txt" | head -n "$1" | while IFS= read -r domain; do
+        check_domain "$domain" >> "domains-bad-disconnect_ads-shuf.txt"
+    done
 
     # Ajuste de formatação
     dos2unix domains-bad*-shuf.txt
@@ -196,11 +204,19 @@ function shuffleBad(){
 export -f shuffleBad;
 
 function downloadLists(){
-	wget "https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-hosts.txt" -O - | grep -i -v -e '^#' | sed 's|127.0.0.1\t||' > "domains-bad-abusech.txt";
-	wget "https://hole.cert.pl/domains/domains.txt" -O "domains-bad-certpl.txt";
-	dos2unix domains-bad*.txt; #Fixup
-	wget "https://raw.githubusercontent.com/vanderleiromera/dns_security/refs/heads/main/dns_comparator/domains-good.txt" -O "domains-good.txt";
+	wget "https://malware-filter.gitlab.io/malware-filter/urlhaus-filter-hosts.txt" -O "domains-bad-abusech.txt"
+	sed -i '/^[[:blank:]]*#/d;s/#.*//' "domains-bad-abusech.txt"  # Remove comentários.
+	sed -i 's/^0.0.0.0 //; /^#.*$/d; /^ *$/d; s/\t*//g' "domains-bad-abusech.txt"  # Remove IPs 0.0.0.0, comentários, linhas vazias e tabs.
+	
+	wget "https://hole.cert.pl/domains/domains.txt" -O "domains-bad-certpl.txt"
+	dos2unix domains-bad*.txt  # Corrige o formato dos arquivos.
+	
+	wget "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt" -O "domains-bad-disconnect_ads.txt"
+	sed -i '/^[[:blank:]]*#/d;s/#.*//' "domains-bad-disconnect_ads.txt"  # Remove comentários.
+	
+	wget "https://raw.githubusercontent.com/vanderleiromera/dns_security/refs/heads/main/dns_comparator/domains-good.txt" -O "domains-good.txt"
 }
+
 export -f downloadLists;
 
 #Download das listas
